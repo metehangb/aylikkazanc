@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>aylık Kazançları</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background: #f9f9f9;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    color: #34495e;
+  }
+  .boxes-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .box {
+    background: white;
+    border: 2px solid #2980b9;
+    border-radius: 8px;
+    padding: 20px;
+    flex: 1 1 120px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: background-color 0.3s ease;
+    margin-bottom: 15px;
+    position: relative;
+  }
+  .box:hover {
+    background-color: #2980b9;
+    color: white;
+    cursor: pointer;
+  }
+  .month {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+  }
+  .earning {
+    font-size: 1.3em;
+    color: #27ae60;
+  }
+  .forecast {
+    margin-top: 40px;
+    font-size: 1.4em;
+    font-weight: bold;
+    text-align: center;
+    color: #27ae60;
+  }
+  .total {
+    margin-top: 25px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #c0392b;
+    cursor: pointer;
+  }
+  .total:hover {
+    text-decoration: underline;
+  }
+  form {
+    margin-top: 30px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  input[type="text"], input[type="number"] {
+    padding: 10px;
+    font-size: 1em;
+    border: 2px solid #2980b9;
+    border-radius: 5px;
+    width: 150px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    background-color: #2980b9;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #3498db;
+  }
+
+  
+  .edit-save-btn {
+    margin: 8px 5px 0 0;
+    padding: 6px 10px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .edit-delete-btn {
+    margin: 8px 0 0 0;
+    padding: 6px 10px;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  
+  #edit-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-weight: bold;
+    z-index: 1000;
+  }
+</style>
+</head>
+<body>
+
+<h1>Aylık Kazançları</h1>
+
+<div class="boxes-container" id="boxes-container">
+  
+</div>
+
+<div class="forecast" id="forecast">
+
+</div>
+
+<div class="total" id="total" onclick="location.href='grafik.html'">
+  Toplam Kazanç: ₺0
+</div>
+
+<form id="add-month-form">
+  <input type="text" id="month-input" placeholder="Ay ismi" required />
+  <input type="number" id="earning-input" placeholder="Kazanç (₺)" required min="0" />
+  <button type="submit">Ekle</button>
+</form>
+
+
+<button id="edit-toggle-btn">Düzenle</button>
+
+<script>
+  const boxesContainer = document.getElementById('boxes-container');
+  const totalDiv = document.getElementById('total');
+  const forecastDiv = document.getElementById('forecast');
+  const form = document.getElementById('add-month-form');
+  const editToggleBtn = document.getElementById('edit-toggle-btn');
+
+  let earningsData = [
+    {month:"Ocak", earning:100000},
+    {month:"Şubat", earning:110000},
+    {month:"Mart", earning:130000},
+    {month:"Nisan", earning:120000},
+    {month:"Mayıs", earning:150000},
+    {month:"Haziran", earning:140000},
+    {month:"Temmuz", earning:160000}
+  ];
+
+  if(localStorage.getItem('earningsData')){
+    earningsData = JSON.parse(localStorage.getItem('earningsData'));
+  }
+
+  let editMode = false;
+
+  editToggleBtn.addEventListener('click', () => {
+    editMode = !editMode;
+    editToggleBtn.textContent = editMode ? 'Düzenlemeyi Kapat' : 'Düzenle';
+    renderBoxes();
+  });
+
+  function renderBoxes(){
+    boxesContainer.innerHTML = '';
+
+    earningsData.forEach((data, index) => {
+      const box = document.createElement('div');
+      box.className = 'box';
+
+      if(editMode){
+        
+        const monthInput = document.createElement('input');
+        monthInput.type = 'text';
+        monthInput.value = data.month;
+        monthInput.style.width = '100px';
+        monthInput.style.marginBottom = '8px';
+
+        const earningInput = document.createElement('input');
+        earningInput.type = 'number';
+        earningInput.value = data.earning;
+        earningInput.min = 0;
+        earningInput.style.width = '100px';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Kaydet';
+        saveBtn.className = 'edit-save-btn';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Sil';
+        deleteBtn.className = 'edit-delete-btn';
+
+        box.appendChild(monthInput);
+        box.appendChild(document.createElement('br'));
+        box.appendChild(earningInput);
+        box.appendChild(document.createElement('br'));
+        box.appendChild(saveBtn);
+        box.appendChild(deleteBtn);
+
+        saveBtn.addEventListener('click', () => {
+          const newMonth = monthInput.value.trim();
+          const newEarning = parseFloat(earningInput.value);
+
+          if(!newMonth || isNaN(newEarning) || newEarning < 0){
+            alert('Lütfen geçerli bir ay ismi ve pozitif kazanç giriniz.');
+            return;
+          }
+
+          if(earningsData.some((d,i) => i !== index && d.month.toLowerCase() === newMonth.toLowerCase())){
+            alert('Bu ay zaten mevcut!');
+            return;
+          }
+
+          earningsData[index].month = newMonth;
+          earningsData[index].earning = newEarning;
+          localStorage.setItem('earningsData', JSON.stringify(earningsData));
+          renderBoxes();
+        });
+
+        deleteBtn.addEventListener('click', () => {
+          if(confirm(`${data.month} ayını silmek istediğine emin misin?`)){
+            earningsData.splice(index, 1);
+            localStorage.setItem('earningsData', JSON.stringify(earningsData));
+            renderBoxes();
+          }
+        });
+
+      } else {
+        
+        const monthDiv = document.createElement('div');
+        monthDiv.className = 'month';
+        monthDiv.textContent = data.month;
+
+        const earningDiv = document.createElement('div');
+        earningDiv.className = 'earning';
+        earningDiv.textContent = '₺' + data.earning.toLocaleString('tr-TR');
+
+        box.appendChild(monthDiv);
+        box.appendChild(earningDiv);
+      }
+
+      boxesContainer.appendChild(box);
+    });
+
+    let total = earningsData.reduce((acc, cur) => acc + cur.earning, 0);
+    totalDiv.textContent = 'Toplam Kazanç: ₺' + total.toLocaleString('tr-TR');
+
+    if(earningsData.length >= 2){
+      const last = earningsData[earningsData.length-1].earning;
+      const secondLast = earningsData[earningsData.length-2].earning;
+      const forecast = ((last + secondLast) / 2).toFixed(0);
+      forecastDiv.textContent = 'Önümüzdeki ay için tahmini kazanç: ₺' + Number(forecast).toLocaleString('tr-TR') + ' (tahmini veri)';
+    } else {
+      forecastDiv.textContent = '';
+    }
+
+    localStorage.setItem('earningsData', JSON.stringify(earningsData));
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    const month = document.getElementById('month-input').value.trim();
+    const earning = parseFloat(document.getElementById('earning-input').value);
+
+    if(!month || isNaN(earning) || earning < 0){
+      alert('Lütfen geçerli bir ay ismi ve pozitif kazanç giriniz.');
+      return;
+    }
+
+    if(earningsData.some(d => d.month.toLowerCase() === month.toLowerCase())){
+      alert('Bu ay zaten mevcut!');
+      return;
+    }
+
+    earningsData.push({month, earning});
+    renderBoxes();
+    form.reset();
+  });
+
+  renderBoxes();
+</script>
+
+</body>
+</html>
